@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#075985">
+<title>SOS Escola | Lei Lucas</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<!-- TELA INICIAL DE SELEÇÃO DE CONTA -->
+<div id="auth-screen">
+  <div class="auth-box">
+    <div class="auth-brand">
+      <h2>SOS Escola</h2>
+    </div>
+    <div id="firebase-login">
+      <p class="auth-intro">Entre com a conta fornecida pela gestão.</p>
+      <form onsubmit="entrarFirebase(event)">
+        <label for="auth-email">E-mail</label>
+        <input type="email" id="auth-email" autocomplete="username" required>
+        <label for="auth-password">Senha</label>
+        <input type="password" id="auth-password" autocomplete="current-password" required>
+        <p id="login-error" class="auth-error" role="alert" hidden></p>
+        <button id="login-submit" class="btn btn-primary" type="submit">Entrar</button>
+      </form>
+      <p class="auth-footnote">Contas são criadas e gerenciadas no Firebase Authentication.</p>
+    </div>
+
+    <div id="profile-select" hidden>
+      <p class="auth-intro">Selecione seu perfil.</p>
+      <button class="role-card" onclick="entrarComo('instruido')">
+        <div>
+          <div>Equipe escolar</div>
+          <div>Acesse protocolos, plano de capacitação e treinamento.</div>
+        </div>
+      </button>
+
+      <button class="role-card instrutor" onclick="entrarComo('instrutor')">
+        <div>
+          <div>Instrutores e gestão</div>
+          <div>Acesse avaliações práticas e indicadores.</div>
+        </div>
+      </button>
+    </div>
+
+    <div class="auth-emergency">
+      <span>Emergência? Ligue sem acessar o app.</span>
+      <div class="call-btns">
+        <button type="button" onclick="ligarEmergencia('192')" class="call-btn">SAMU 192</button>
+        <button type="button" onclick="ligarEmergencia('193')" class="call-btn">Bombeiros 193</button>
+      </div>
+      <p class="emergency-notice">Os botões abrem uma chamada real. Em simulações, não confirme a ligação no discador.</p>
+    </div>
+  </div>
+</div>
+
+<header>
+  <div class="brand-lockup">
+    <div>
+      <h1>SOS Escola</h1>
+      <p id="header-sub">Primeiros socorros | Lei Lucas</p>
+    </div>
+  </div>
+  <button class="role-badge" onclick="trocarPerfil()">
+    <span id="role-label">Perfil: Instruído</span><br>
+    <span style="font-size:0.65rem;text-decoration:underline;">Sair</span>
+  </button>
+</header>
+
+<div class="container">
+  <div class="emergency-banner">
+    <h2>Emergência?</h2>
+    <div class="call-btns">
+      <button type="button" onclick="ligarEmergencia('192')" class="call-btn">Ligar para o SAMU · 192</button>
+      <button type="button" onclick="ligarEmergencia('193')" class="call-btn">Ligar para Bombeiros · 193</button>
+    </div>
+    <p class="emergency-notice">Emergência real: confirme a chamada no discador.</p>
+    <button type="button" class="demo-call-btn" onclick="simularLigacaoEmergencia('192')">Testar chamada simulada</button>
+  </div>
+
+  <!-- ABA 1: GUIA RÁPIDO + PREVENÇÃO -->
+  <div id="tab-guia" class="section active">
+    <div class="card">
+      <h3>Protocolos</h3>
+      <p class="sub-text">Orientações para ocorrências comuns.</p>
+      <div class="proto-grid" id="proto-list"></div>
+    </div>
+    <div id="proto-detail" class="card" style="display:none;"></div>
+    <details class="card terms-card">
+      <summary>Termos e serviços</summary>
+      <div class="terms-content">
+        <h4>Sobre o SOS Escola</h4>
+        <p>Este aplicativo é um recurso educativo para apoiar a capacitação da comunidade escolar em primeiros socorros na infância, com protocolos resumidos, casos de aprendizagem e checklist prático.</p>
+        <h4>Uso em emergências</h4>
+        <p>O conteúdo não substitui atendimento profissional, protocolos oficiais, treinamento presencial ou orientação do serviço de emergência. Em uma emergência real, ligue 192 para o SAMU ou 193 para os Bombeiros. A tela de chamada simulada é apenas uma demonstração e não contata nenhum serviço.</p>
+        <h4>Dados e privacidade</h4>
+        <p>O Firebase Analytics coleta métricas de uso e informações técnicas do navegador ou aparelho. Os registros de avaliação ficam no armazenamento local e são sincronizados com o Firebase Realtime Database quando houver conexão. A instituição deve configurar as regras de acesso do banco. A exportação CSV cria um arquivo no aparelho. Evite inserir dados pessoais desnecessários e proteja aparelhos compartilhados.</p>
+        <h4>Acesso de instrutor</h4>
+        <p>O acesso aos indicadores exige uma conta autenticada e autorização específica no Firebase. As permissões são verificadas pelas regras do banco, não apenas pela seleção de perfil no aplicativo.</p>
+      </div>
+    </details>
+  </div>
+
+  <!-- ABA 2: PLANO DE AÇÃO (3 MESES) -->
+  <div id="tab-plano" class="section">
+    <div class="card">
+      <h3>Plano de capacitação</h3>
+      <p class="sub-text">Ciclo de três meses para a comunidade escolar.</p>
+
+      <div class="timeline-step">
+        <span class="timeline-tag">MÊS 1 • DIAGNÓSTICO E PREVENÇÃO</span>
+        <h4 style="font-size:0.92rem;margin-bottom:4px;">Levantamento de Conhecimento Prévio</h4>
+        <p style="font-size:0.82rem;color:#4B5563;">Aplicação do <strong>Pré-Teste</strong> e escala de autoconfiança. Mapeamento de riscos físicos na escola e oficina de prevenção de acidentes.</p>
+      </div>
+
+      <div class="timeline-step">
+        <span class="timeline-tag">MÊS 2 • METODOLOGIAS ATIVAS</span>
+        <h4 style="font-size:0.92rem;margin-bottom:4px;">Oficinas Teórico-Práticas e Simulação Realística</h4>
+        <p style="font-size:0.82rem;color:#4B5563;">Treinamento prático com manequins e cenários simulados conduzido por enfermeiros e/ou Corpo de Bombeiros.</p>
+      </div>
+
+      <div class="timeline-step">
+        <span class="timeline-tag">MÊS 3 • AVALIAÇÃO E CONTINUIDADE</span>
+        <h4 style="font-size:0.92rem;margin-bottom:4px;">Pós-Teste, Checklist Prático e Reciclagem</h4>
+        <p style="font-size:0.82rem;color:#4B5563;">Aplicação do <strong>Pós-Teste</strong>, verificação prática pelo instrutor e agendamento de ciclos periódicos de atualização.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ABA 3: SIMULADOR (PESSOA INSTRUÍDA) -->
+  <div id="tab-treino" class="section">
+    <div id="reg-form" class="card">
+      <h3>Treinamento</h3>
+      <p class="sub-text">Responda aos casos e acompanhe seu aprendizado.</p>
+
+      <label for="p-nome">Nome Completo do Profissional</label>
+      <input type="text" id="p-nome" placeholder="Ex: Maria Silva">
+
+      <label for="p-cargo">Função na Comunidade Escolar</label>
+      <select id="p-cargo">
+        <option value="Professor(a)">Professor(a)</option>
+        <option value="Auxiliar / Cuidador(a)">Auxiliar / Cuidador(a)</option>
+        <option value="Funcionário(a) de Apoio / Cozinha">Funcionário(a) de Apoio / Cozinha</option>
+        <option value="Gestão Escolar">Gestão Escolar</option>
+      </select>
+
+      <label for="p-etapa">Etapa da Capacitação</label>
+      <select id="p-etapa">
+        <option value="Pré-Teste">Pré-Teste (Diagnóstico Inicial - Mês 1)</option>
+        <option value="Pós-Teste">Pós-Teste (Avaliação Final - Mês 3)</option>
+      </select>
+
+      <p id="confidence-label" class="confidence-label">Nível de autoconfiança para agir hoje. De 1, nenhuma, a 5, alta.</p>
+      <div class="likert-group" id="likert-box" role="group" aria-labelledby="confidence-label">
+        <button type="button" class="likert-btn" aria-pressed="false" onclick="selecionarConfianca(1, this)">1<br>Nenhuma</button>
+        <button type="button" class="likert-btn" aria-pressed="false" onclick="selecionarConfianca(2, this)">2<br>Pouca</button>
+        <button type="button" class="likert-btn selected" aria-pressed="true" onclick="selecionarConfianca(3, this)">3<br>Média</button>
+        <button type="button" class="likert-btn" aria-pressed="false" onclick="selecionarConfianca(4, this)">4<br>Boa</button>
+        <button type="button" class="likert-btn" aria-pressed="false" onclick="selecionarConfianca(5, this)">5<br>Alta</button>
+      </div>
+
+      <button class="btn btn-primary" onclick="iniciarSimulacao()">Iniciar treinamento</button>
+    </div>
+
+    <div id="quiz-area" class="card" style="display:none;">
+      <div style="display:flex;justify-content:space-between;font-size:0.8rem;color:#6B7280;margin-bottom:6px;">
+        <span id="q-progress">Caso 1 de 8</span>
+        <span id="q-score">Acertos: 0</span>
+      </div>
+      <h3 id="q-title"></h3>
+      <p id="q-desc" style="font-size:0.88rem;margin-bottom:12px;line-height:1.45;"></p>
+      <div id="q-options"></div>
+      <div id="q-feedback" style="display:none;"></div>
+      <button id="q-next" class="btn btn-primary" style="display:none;" onclick="proximoCaso()">Continuar</button>
+    </div>
+
+    <div id="result-area" class="card" style="display:none;">
+      <h3>Etapa Concluída!</h3>
+      <div class="cert-box" id="cert-content"></div>
+      <button class="btn btn-secondary" onclick="reiniciarTreino()">Novo treinamento</button>
+    </div>
+  </div>
+
+  <!-- ABA 4: PAINEL EXCLUSIVO DO INSTRUTOR -->
+  <div id="tab-gestao" class="section">
+    <div class="card">
+      <h3>Avaliação prática</h3>
+      <p class="sub-text">Checklist para uso do instrutor durante a oficina.</p>
+      <label for="chk-nome">Nome do participante avaliado na prática</label>
+      <input type="text" id="chk-nome" placeholder="Ex.: Maria Silva">
+      <div id="checklist-items">
+        <label class="check-item"><input type="checkbox" class="prac-chk"> Reconhece sinais de gravidade e aciona SAMU (192) corretamente</label>
+        <label class="check-item"><input type="checkbox" class="prac-chk"> Executa Manobra de Heimlich / desobstrução conforme faixa etária</label>
+        <label class="check-item"><input type="checkbox" class="prac-chk"> Posiciona vítima em crise convulsiva em Posição Lateral de Segurança</label>
+        <label class="check-item"><input type="checkbox" class="prac-chk"> Realiza compressão direta em sangramentos e postura correta na epistaxe</label>
+        <label class="check-item"><input type="checkbox" class="prac-chk"> Resfria queimaduras apenas com água corrente sem aplicar substâncias</label>
+      </div>
+      <button class="btn btn-secondary" onclick="salvarChecklist()">Salvar Avaliação Prática</button>
+    </div>
+
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <h3>Indicadores</h3>
+        <button onclick="atualizarPainelGestao()" class="sync-button">Atualizar</button>
+      </div>
+      <div id="sync-status" class="sync-pill sync-local">Dados neste aparelho</div>
+      <div id="stats-summary" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;"></div>
+      <div style="overflow-x:auto;">
+        <table>
+          <thead>
+            <tr><th>Profissional</th><th>Etapa</th><th>Nota</th><th>Confiança</th></tr>
+          </thead>
+          <tbody id="records-table"></tbody>
+        </table>
+      </div>
+      <button class="btn btn-outline" onclick="exportarCSV()">Exportar dados (CSV)</button>
+    </div>
+
+    <div class="card">
+      <h3>Sincronização</h3>
+      <p class="sub-text">Conecte um Firebase Realtime Database para sincronizar os registros.</p>
+      <label for="fb-url-input">URL do Firebase Realtime Database</label>
+      <input type="url" id="fb-url-input" placeholder="https://seu-projeto-default-rtdb.firebaseio.com">
+      <p class="sub-text">Configure as regras de segurança do banco antes de armazenar nomes. Não use regras públicas em dados reais.</p>
+      <button class="btn btn-primary" onclick="salvarConfigFirebase()">Conectar Banco na Nuvem</button>
+    </div>
+  </div>
+</div>
+
+<nav class="bottom-nav" aria-label="Navegação principal">
+  <button class="nav-btn active" id="nav-guia" aria-controls="tab-guia" aria-current="page" onclick="mudarAba('guia', this)">Protocolos</button>
+  <button class="nav-btn" id="nav-plano" aria-controls="tab-plano" onclick="mudarAba('plano', this)">Plano</button>
+  <button class="nav-btn" id="nav-treino" aria-controls="tab-treino" onclick="mudarAba('treino', this)">Treinamento</button>
+  <button class="nav-btn" id="nav-gestao" aria-controls="tab-gestao" style="display:none;" onclick="mudarAba('gestao', this)">Gestão</button>
+</nav>
+
+<div id="call-demo" class="call-demo" role="dialog" aria-modal="true" aria-labelledby="call-demo-title" aria-describedby="call-demo-status" hidden>
+  <section class="phone-screen">
+    <div class="phone-status-bar" aria-hidden="true">
+      <span>Simulação</span>
+      <span class="phone-status-icons">
+        <svg viewBox="0 0 24 24"><path d="M2 9a15 15 0 0 1 20 0M5 12a10 10 0 0 1 14 0m-11 3a5 5 0 0 1 8 0m-4 4h.01"/></svg>
+        <svg viewBox="0 0 24 24"><path d="M3 7h15v12H3zM20 10v6h2v-6z"/></svg>
+      </span>
+    </div>
+    <p class="call-demo-label">SIMULAÇÃO</p>
+    <div class="call-avatar-wrap" aria-hidden="true">
+      <div class="call-avatar">
+        <svg class="service-icon" viewBox="0 0 64 64" focusable="false">
+          <path d="M7 17h31a4 4 0 0 1 4 4v25H7zM42 28h10l8 10v8H42z" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/>
+          <path d="M18 24v13m-6.5-6.5h13M44 33h6l5 6H44z" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+          <circle cx="19" cy="48" r="5" fill="#17252e" stroke="currentColor" stroke-width="3"/>
+          <circle cx="51" cy="48" r="5" fill="#17252e" stroke="currentColor" stroke-width="3"/>
+        </svg>
+      </div>
+    </div>
+    <h2 id="call-demo-title" tabindex="-1">SAMU 192</h2>
+    <p class="call-demo-subtitle">Serviço de emergência</p>
+    <p id="call-demo-status" class="call-demo-status" role="status" aria-live="polite">Chamando…</p>
+    <p id="call-demo-duration" class="call-demo-duration" role="timer" aria-live="off" aria-label="Duração da chamada simulada">00:00</p>
+    <div class="call-demo-controls" aria-hidden="true">
+      <div>
+        <span><svg viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M8 7h.01M12 7h.01M16 7h.01M8 11h.01M12 11h.01M16 11h.01M8 15h.01M12 15h.01M16 15h.01"/></svg></span>
+        <small>Teclado</small>
+      </div>
+      <div>
+        <span><svg viewBox="0 0 24 24"><path d="M4 10v4h4l5 4V6l-5 4zM17 9a5 5 0 0 1 0 6m3-9a9 9 0 0 1 0 12"/></svg></span>
+        <small>Alto-falante</small>
+      </div>
+      <div>
+        <span><svg viewBox="0 0 24 24"><path d="M12 3a3 3 0 0 0-3 3v5a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3zM6 11a6 6 0 0 0 12 0m-6 6v4m-4 0h8"/></svg></span>
+        <small>Silenciar</small>
+      </div>
+    </div>
+    <button type="button" id="call-demo-action" class="call-end-button" aria-label="Encerrar simulação" onclick="encerrarSimulacaoLigacao()">
+      <span class="call-end-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24"><path d="M4 15.5c4.8-4.1 11.2-4.1 16 0l-2 4a1.5 1.5 0 0 1-1.8.8l-3.1-1a1.5 1.5 0 0 1-1-1.4v-1.4a9 9 0 0 0-2.2 0v1.4a1.5 1.5 0 0 1-1 1.4l-3.1 1a1.5 1.5 0 0 1-1.8-.8z"/></svg>
+      </span>
+      <span id="call-demo-action-label">Encerrar simulação</span>
+    </button>
+  </section>
+</div>
+
+<script src="js/firebase-init.js"></script>
+<script src="js/script.js"></script>
+</body>
+</html>

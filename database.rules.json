@@ -1,0 +1,18 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+    "sos_escola_instructors": {
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid"
+      }
+    },
+    "sos_escola_records": {
+      ".read": "auth != null && root.child('sos_escola_instructors').child(auth.uid).val() === true",
+      "$recordId": {
+        ".write": "auth != null && (root.child('sos_escola_instructors').child(auth.uid).val() === true || (!data.exists() && newData.child('uid').val() === auth.uid) || (data.child('uid').val() === auth.uid && newData.child('uid').val() === auth.uid))",
+        ".validate": "newData.hasChildren(['id', 'uid', 'nome', 'tipo', 'etapa', 'criadoEm']) && newData.child('id').val() === $recordId && newData.child('uid').isString() && newData.child('nome').isString() && (newData.child('tipo').val() === 'questionario' || newData.child('tipo').val() === 'pratica')"
+      }
+    }
+  }
+}
