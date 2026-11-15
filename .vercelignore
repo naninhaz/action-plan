@@ -1,0 +1,5 @@
+.agents/
+android/
+capacitor.config.json
+skills-lock.json
+test/

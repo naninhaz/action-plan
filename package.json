@@ -3,12 +3,16 @@
     "build": "npm run build:firebase",
     "build:firebase": "esbuild src/firebase-init.js --bundle --platform=browser --format=iife --minify --outfile=html/js/firebase-init.js"
   },
+  "engines": {
+    "node": ">=22"
+  },
   "dependencies": {
     "@capacitor/android": "^8.6.2",
     "@capacitor/cli": "^8.6.2",
     "@capacitor/core": "^8.6.2",
     "capacitor-call-number": "^1.0.3",
-    "firebase": "^13.3.0"
+    "firebase": "^13.3.0",
+    "firebase-admin": "^14.5.1"
   },
   "devDependencies": {
     "esbuild": "^0.28.2"
