@@ -1,4 +1,5 @@
 const assert = require("node:assert/strict");
+const { generateKeyPairSync } = require("node:crypto");
 const { test } = require("node:test");
 const { codigoCorreto, validateRegistration } = require("../api/register");
 const register = require("../api/register");
@@ -60,6 +61,30 @@ test("compares instructor codes without accepting partial or mismatched values",
   assert.equal(codigoCorreto("convite-seguro", "convite-seguro"), true);
   assert.equal(codigoCorreto("convite-invalido", "convite-seguro"), false);
   assert.equal(codigoCorreto("curto", "convite-seguro"), false);
+});
+
+test("initializes Firebase services using the modular Admin SDK", () => {
+  const { privateKey } = generateKeyPairSync("rsa", { modulusLength: 2048 });
+  const chavePrivada = privateKey.export({ type: "pkcs8", format: "pem" });
+  const variavelAnterior = process.env.FIREBASE_SERVICE_ACCOUNT;
+  process.env.FIREBASE_SERVICE_ACCOUNT = JSON.stringify({
+    project_id: "sos-escola-a6ccb",
+    client_email: "test@sos-escola-a6ccb.iam.gserviceaccount.com",
+    private_key: chavePrivada
+  });
+
+  try {
+    const servicos = register.criarServicosFirebase();
+    assert.equal(typeof servicos.auth.createUser, "function");
+    assert.equal(typeof servicos.database.ref, "function");
+    assert.equal(servicos.chaveHash, chavePrivada);
+  } finally {
+    if (variavelAnterior === undefined) {
+      delete process.env.FIREBASE_SERVICE_ACCOUNT;
+    } else {
+      process.env.FIREBASE_SERVICE_ACCOUNT = variavelAnterior;
+    }
+  }
 });
 
 test("rejects non-POST signup requests", async () => {
