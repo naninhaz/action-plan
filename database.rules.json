@@ -8,9 +8,9 @@
       }
     },
     "sos_escola_profiles": {
-      ".read": "auth != null && root.child('sos_escola_instructors').child(auth.uid).val() === true && root.child('sos_escola_profiles').child(auth.uid).child('perfil').val() === 'instrutor'",
+      ".read": "auth != null && (root.child('sos_escola_instructors').child(auth.uid).val() === true || root.child('sos_escola_profiles').child(auth.uid).child('perfil').val() === 'instrutor')",
       "$uid": {
-        ".read": "auth != null && (auth.uid === $uid || (root.child('sos_escola_instructors').child(auth.uid).val() === true && root.child('sos_escola_profiles').child(auth.uid).child('perfil').val() === 'instrutor'))",
+        ".read": "auth != null && (auth.uid === $uid || root.child('sos_escola_instructors').child(auth.uid).val() === true || root.child('sos_escola_profiles').child(auth.uid).child('perfil').val() === 'instrutor')",
         ".write": "auth != null && auth.uid === $uid",
         ".validate": "newData.child('uid').val() === auth.uid && (data.exists() ? newData.child('email').val() === data.child('email').val() && newData.child('perfil').val() === data.child('perfil').val() && newData.child('tipo').val() === data.child('tipo').val() && newData.child('cargo').val() === data.child('cargo').val() && newData.child('profissaoInstrutor').val() === data.child('profissaoInstrutor').val() && newData.child('criadoEm').val() === data.child('criadoEm').val() && newData.child('tipoCadastroSolicitado').val() === data.child('tipoCadastroSolicitado').val() && newData.child('fotoPath').val() === data.child('fotoPath').val() : newData.child('perfil').val() === 'equipe' && newData.child('tipo').val() === 'equipe' && newData.child('profissaoInstrutor').val() === '' && (!newData.child('tipoCadastroSolicitado').exists() || newData.child('tipoCadastroSolicitado').val() === 'instrutor') && newData.child('email').val() === auth.token.email)",
         "foto": {
@@ -20,29 +20,41 @@
     },
     "sos_escola_signup_attempts": {
       "codigos": {
-        ".indexOn": ["expiresAt"]
+        ".indexOn": [
+          "expiresAt"
+        ]
       },
       "cadastros": {
-        ".indexOn": ["expiresAt"]
+        ".indexOn": [
+          "expiresAt"
+        ]
       },
       "classificacoes": {
-        ".indexOn": ["expiresAt"]
+        ".indexOn": [
+          "expiresAt"
+        ]
       }
     },
     "sos_escola_records": {
-      ".read": "auth != null && ((root.child('sos_escola_instructors').child(auth.uid).val() === true && root.child('sos_escola_profiles').child(auth.uid).child('perfil').val() === 'instrutor') || ((query.orderByChild === 'uid' || query.orderByChild === 'participanteUid') && query.equalTo === auth.uid))",
-      ".indexOn": ["uid", "participanteUid"],
+      ".read": "auth != null && (root.child('sos_escola_instructors').child(auth.uid).val() === true || root.child('sos_escola_profiles').child(auth.uid).child('perfil').val() === 'instrutor' || ((query.orderByChild === 'uid' || query.orderByChild === 'participanteUid') && query.equalTo === auth.uid))",
+      ".indexOn": [
+        "uid",
+        "participanteUid"
+      ],
       "$recordId": {
-        ".write": "auth != null && ((root.child('sos_escola_instructors').child(auth.uid).val() === true && root.child('sos_escola_profiles').child(auth.uid).child('perfil').val() === 'instrutor') || (newData.child('uid').val() === auth.uid && newData.child('tipo').val() === 'questionario' && (!newData.child('participanteUid').exists() || newData.child('participanteUid').val() === auth.uid) && (!data.exists() || (data.child('uid').val() === auth.uid && data.child('tipo').val() === 'questionario'))))",
+        ".write": "auth != null && (root.child('sos_escola_instructors').child(auth.uid).val() === true || root.child('sos_escola_profiles').child(auth.uid).child('perfil').val() === 'instrutor' || (newData.child('uid').val() === auth.uid && newData.child('tipo').val() === 'questionario' && (!newData.child('participanteUid').exists() || newData.child('participanteUid').val() === auth.uid) && (!data.exists() || (data.child('uid').val() === auth.uid && data.child('tipo').val() === 'questionario'))))",
         ".validate": "newData.hasChildren(['id', 'uid', 'nome', 'tipo', 'etapa', 'criadoEm']) && newData.child('id').val() === $recordId && newData.child('uid').isString() && newData.child('nome').isString() && (newData.child('tipo').val() === 'questionario' || newData.child('tipo').val() === 'pratica') && (!newData.child('participanteUid').exists() || root.child('sos_escola_instructors').child(auth.uid).val() === true || newData.child('participanteUid').val() === auth.uid) && (newData.child('tipo').val() !== 'pratica' || (newData.hasChildren(['nota', 'observacao', 'checklistTipo', 'checklist', 'checklistItens']) && newData.child('nota').isNumber() && newData.child('nota').val() >= 0 && newData.child('nota').val() <= 10 && (newData.child('checklistTipo').val() === 'profissional-saude' || newData.child('checklistTipo').val() === 'profissional-seguranca-resgate')))"
       }
     },
     "sos_escola_feedback": {
-      ".read": "auth != null && ((query.orderByChild === 'uid' && query.equalTo === auth.uid) || (query.orderByChild === 'instrutorUid' && query.equalTo === auth.uid && root.child('sos_escola_instructors').child(auth.uid).val() === true))",
-      ".indexOn": ["uid", "instrutorUid"],
+      ".read": "auth != null && (root.child('sos_escola_instructors').child(auth.uid).val() === true || root.child('sos_escola_profiles').child(auth.uid).child('perfil').val() === 'instrutor' || (query.orderByChild === 'uid' && query.equalTo === auth.uid) || (query.orderByChild === 'instrutorUid' && query.equalTo === auth.uid))",
+      ".indexOn": [
+        "uid",
+        "instrutorUid"
+      ],
       "$feedbackId": {
-        ".write": "auth != null && !data.exists() && newData.exists() && newData.child('uid').val() === auth.uid && newData.child('instrutorUid').val() !== auth.uid && root.child('sos_escola_instructors').child(newData.child('instrutorUid').val()).val() === true && root.child('sos_escola_profiles').child(newData.child('instrutorUid').val()).child('perfil').val() === 'instrutor'",
-        ".validate": "newData.hasChildren(['id', 'uid', 'nome', 'tipo', 'etapa', 'criadoEm', 'instrutorUid', 'notaInstrutor', 'notaCapacitacao', 'feedback']) && newData.child('id').val() === $feedbackId && newData.child('id').val().length <= 128 && newData.child('uid').isString() && newData.child('nome').isString() && newData.child('nome').val().length <= 100 && newData.child('tipo').val() === 'feedback' && newData.child('etapa').val() === 'Feedback da capacitação' && newData.child('criadoEm').isString() && newData.child('criadoEm').val().length <= 40 && newData.child('instrutorUid').isString() && newData.child('notaInstrutor').isNumber() && newData.child('notaInstrutor').val() >= 1 && newData.child('notaInstrutor').val() <= 5 && newData.child('notaCapacitacao').isNumber() && newData.child('notaCapacitacao').val() >= 1 && newData.child('notaCapacitacao').val() <= 5 && newData.child('feedback').isString() && newData.child('feedback').val().length > 0 && newData.child('feedback').val().length <= 1000"
+        ".write": "auth != null && !data.exists() && newData.exists() && (!newData.child('uid').exists() || newData.child('uid').val() === auth.uid || newData.child('uid').val() === 'anonimo') && newData.child('instrutorUid').val() !== auth.uid && (root.child('sos_escola_instructors').child(newData.child('instrutorUid').val()).val() === true || root.child('sos_escola_profiles').child(newData.child('instrutorUid').val()).child('perfil').val() === 'instrutor')",
+        ".validate": "newData.hasChildren(['id', 'nome', 'tipo', 'etapa', 'criadoEm', 'instrutorUid', 'notaInstrutor', 'notaCapacitacao', 'feedback']) && newData.child('id').val() === $feedbackId && newData.child('id').val().length <= 128 && (!newData.child('uid').exists() || newData.child('uid').isString()) && newData.child('nome').isString() && newData.child('nome').val() === 'Anônimo' && newData.child('tipo').val() === 'feedback' && newData.child('etapa').val() === 'Feedback da capacitação' && newData.child('criadoEm').isString() && newData.child('criadoEm').val().length <= 40 && newData.child('instrutorUid').isString() && newData.child('notaInstrutor').isNumber() && newData.child('notaInstrutor').val() >= 1 && newData.child('notaInstrutor').val() <= 5 && newData.child('notaCapacitacao').isNumber() && newData.child('notaCapacitacao').val() >= 1 && newData.child('notaCapacitacao').val() <= 5 && newData.child('feedback').isString() && newData.child('feedback').val().length > 0 && newData.child('feedback').val().length <= 1000"
       }
     }
   }
