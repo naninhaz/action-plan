@@ -303,28 +303,31 @@ async function persistirRegistro(registro) {
 
 function definirStatusSincronizacao(modo, texto) {
   const status = document.getElementById("sync-status");
+  if (!status) return;
   status.className = `sync-pill ${modo === "nuvem" ? "sync-cloud" : "sync-local"}`;
   status.textContent = texto;
 }
 
 function mostrarPainelRegistros(registros) {
   const corpo = document.getElementById("records-table");
-  corpo.replaceChildren();
+  if (corpo) {
+    corpo.replaceChildren();
 
-  for (const registro of registros) {
-    const linha = document.createElement("tr");
-    const valores = [
-      registro.nome || "",
-      registro.etapa || "",
-      `${registro.acertos ?? 0}/${registro.total ?? 0}`,
-      registro.confianca ? `${registro.confianca}/5` : "—"
-    ];
-    for (const valor of valores) {
-      const celula = document.createElement("td");
-      celula.textContent = valor;
-      linha.append(celula);
+    for (const registro of registros) {
+      const linha = document.createElement("tr");
+      const valores = [
+        registro.nome || "",
+        registro.etapa || "",
+        `${registro.acertos ?? 0}/${registro.total ?? 0}`,
+        registro.confianca ? `${registro.confianca}/5` : "—"
+      ];
+      for (const valor of valores) {
+        const celula = document.createElement("td");
+        celula.textContent = valor;
+        linha.append(celula);
+      }
+      corpo.append(linha);
     }
-    corpo.append(linha);
   }
 
   const notas = (etapa) => registros
@@ -337,6 +340,7 @@ function mostrarPainelRegistros(registros) {
     .filter((registro) => Number.isInteger(registro.confianca))
     .map((registro) => registro.confianca);
   const resumo = document.getElementById("stats-summary");
+  if (!resumo) return;
   resumo.replaceChildren();
   const indicadores = [
     ["Registros", String(registros.length)],
@@ -391,6 +395,7 @@ async function atualizarPainelGestao() {
 
 async function salvarConfigFirebase() {
   const campo = document.getElementById("fb-url-input");
+  if (!campo) return;
   const url = campo.value.trim().replace(/\/+$/, "");
   if (!url) {
     localStorage.setItem(CHAVE_FIREBASE, "local");
@@ -414,7 +419,7 @@ async function salvarConfigFirebase() {
 
   localStorage.setItem(CHAVE_FIREBASE, url);
   try {
-    const registros = await sincronizarRegistros();
+    await sincronizarRegistros();
     definirStatusSincronizacao("nuvem", "Sincronizado com o Firebase");
     mostrarPainelRegistros(obterRegistrosLocais());
     alert("Banco conectado e sincronizado.");
@@ -427,6 +432,7 @@ async function salvarConfigFirebase() {
 
 function mostrarProtocolos() {
   const lista = document.getElementById("proto-list");
+  if (!lista) return;
   lista.replaceChildren();
 
   protocolos.forEach((protocolo) => {
@@ -448,6 +454,7 @@ function mostrarProtocolos() {
 
 function mostrarDetalheProtocolo(protocolo) {
   const detalhe = document.getElementById("proto-detail");
+  if (!detalhe) return;
   detalhe.replaceChildren();
   detalhe.style.display = "block";
 
@@ -479,8 +486,8 @@ async function entrarFirebase(evento) {
   evento.preventDefault();
   const botao = document.getElementById("login-submit");
   const erro = document.getElementById("login-error");
-  erro.hidden = true;
-  botao.disabled = true;
+  if (erro) erro.hidden = true;
+  if (botao) botao.disabled = true;
   try {
     await window.SosFirebase.signIn(
       document.getElementById("auth-email").value.trim(),
@@ -489,10 +496,14 @@ async function entrarFirebase(evento) {
     document.getElementById("auth-password").value = "";
   } catch (error) {
     console.error("Não foi possível entrar no Firebase Authentication.", error);
-    erro.textContent = mensagemErroAutenticacao(error);
-    erro.hidden = false;
+    if (erro) {
+      erro.textContent = mensagemErroAutenticacao(error);
+      erro.hidden = false;
+    } else {
+      alert(mensagemErroAutenticacao(error));
+    }
   } finally {
-    botao.disabled = false;
+    if (botao) botao.disabled = false;
   }
 }
 
@@ -538,12 +549,18 @@ async function entrarComo(perfil) {
   }
 
   perfilAtual = perfil === "instrutor" ? "instrutor" : "instruido";
-  document.getElementById("auth-screen").style.display = "none";
-  document.getElementById("role-label").textContent = perfilAtual === "instrutor"
-    ? "Perfil: Instrutor"
-    : "Perfil: Instruído";
-  document.querySelector(".role-badge").style.display = "block";
-  document.getElementById("nav-gestao").style.display = perfilAtual === "instrutor" ? "flex" : "none";
+  const authScreen = document.getElementById("auth-screen");
+  if (authScreen) authScreen.style.display = "none";
+  const roleLabel = document.getElementById("role-label");
+  if (roleLabel) {
+    roleLabel.textContent = perfilAtual === "instrutor"
+      ? "Perfil: Instrutor"
+      : "Perfil: Instruído";
+  }
+  const roleBadge = document.querySelector(".role-badge");
+  if (roleBadge) roleBadge.style.display = "block";
+  const navGestao = document.getElementById("nav-gestao");
+  if (navGestao) navGestao.style.display = perfilAtual === "instrutor" ? "flex" : "none";
   mudarAba("guia");
 }
 
@@ -558,11 +575,16 @@ async function trocarPerfil() {
 
 function atualizarTelaAutenticacao(usuario) {
   perfilAtual = null;
-  document.getElementById("auth-screen").style.display = "flex";
-  document.getElementById("firebase-login").hidden = Boolean(usuario);
-  document.getElementById("profile-select").hidden = !usuario;
-  document.getElementById("nav-gestao").style.display = "none";
-  document.querySelector(".role-badge").style.display = "none";
+  const authScreen = document.getElementById("auth-screen");
+  if (authScreen) authScreen.style.display = "flex";
+  const firebaseLogin = document.getElementById("firebase-login");
+  if (firebaseLogin) firebaseLogin.hidden = Boolean(usuario);
+  const profileSelect = document.getElementById("profile-select");
+  if (profileSelect) profileSelect.hidden = !usuario;
+  const navGestao = document.getElementById("nav-gestao");
+  if (navGestao) navGestao.style.display = "none";
+  const roleBadge = document.querySelector(".role-badge");
+  if (roleBadge) roleBadge.style.display = "none";
 }
 
 function mudarAba(aba) {
@@ -826,6 +848,7 @@ function simularLigacaoEmergencia(numero) {
   const duracao = document.getElementById("call-demo-duration");
   const acao = document.getElementById("call-demo-action-label");
   const botaoAcao = document.getElementById("call-demo-action");
+  if (!demo || !title || !status || !duracao || !acao || !botaoAcao) return;
   focoAnteriorSimulacao = document.activeElement;
   limparTimersSimulacao();
   title.textContent = numero === "192" ? "SAMU 192" : "Bombeiros 193";
@@ -851,10 +874,12 @@ function simularLigacaoEmergencia(numero) {
 
 function atualizarDuracaoSimulacao() {
   if (!simulacaoInicio) return;
+  const duracaoEl = document.getElementById("call-demo-duration");
+  if (!duracaoEl) return;
   const totalSegundos = Math.floor((Date.now() - simulacaoInicio) / 1000);
   const minutos = String(Math.floor(totalSegundos / 60)).padStart(2, "0");
   const segundos = String(totalSegundos % 60).padStart(2, "0");
-  document.getElementById("call-demo-duration").textContent = `${minutos}:${segundos}`;
+  duracaoEl.textContent = `${minutos}:${segundos}`;
 }
 
 function limparTimersSimulacao() {
@@ -864,6 +889,7 @@ function limparTimersSimulacao() {
 
 function encerrarSimulacaoLigacao() {
   const demo = document.getElementById("call-demo");
+  if (!demo) return;
   if (demo.classList.contains("is-ended")) {
     fecharSimulacaoLigacao();
     return;
@@ -871,37 +897,54 @@ function encerrarSimulacaoLigacao() {
   limparTimersSimulacao();
   demo.classList.remove("is-ringing", "is-connected");
   demo.classList.add("is-ended");
-  document.getElementById("call-demo-status").textContent = "Chamada simulada encerrada";
-  document.getElementById("call-demo-action-label").textContent = "Fechar simulação";
-  document.getElementById("call-demo-action").setAttribute("aria-label", "Fechar simulação");
+  const statusEl = document.getElementById("call-demo-status");
+  if (statusEl) statusEl.textContent = "Chamada simulada encerrada";
+  const labelEl = document.getElementById("call-demo-action-label");
+  if (labelEl) labelEl.textContent = "Fechar simulação";
+  const actionEl = document.getElementById("call-demo-action");
+  if (actionEl) actionEl.setAttribute("aria-label", "Fechar simulação");
 }
 
 function fecharSimulacaoLigacao() {
   limparTimersSimulacao();
-  document.getElementById("call-demo").classList.remove("is-ringing", "is-connected", "is-ended");
-  document.getElementById("call-demo").hidden = true;
+  const demo = document.getElementById("call-demo");
+  if (demo) {
+    demo.classList.remove("is-ringing", "is-connected", "is-ended");
+    demo.hidden = true;
+  }
   if (focoAnteriorSimulacao?.isConnected) focoAnteriorSimulacao.focus();
   focoAnteriorSimulacao = null;
 }
 
 function inicializarAplicativo() {
   mostrarProtocolos();
-  document.getElementById("fb-url-input").value = getFirebaseUrl();
-  window.SosFirebase.onAuthStateChanged(
-    atualizarTelaAutenticacao,
-    (error) => {
-      console.error("Não foi possível verificar a sessão Firebase.", error);
-      const aviso = document.getElementById("login-error");
-      aviso.textContent = "Não foi possível verificar a sessão. Recarregue a página.";
-      aviso.hidden = false;
-    }
-  );
+
+  const fbUrlInput = document.getElementById("fb-url-input");
+  if (fbUrlInput && typeof getFirebaseUrl === "function") {
+    fbUrlInput.value = getFirebaseUrl();
+  }
+
+  if (window.SosFirebase && typeof window.SosFirebase.onAuthStateChanged === "function") {
+    window.SosFirebase.onAuthStateChanged(
+      atualizarTelaAutenticacao,
+      (error) => {
+        console.error("Não foi possível verificar a sessão Firebase.", error);
+        const aviso = document.getElementById("login-error");
+        if (aviso) {
+          aviso.textContent = "Não foi possível verificar a sessão. Recarregue a página.";
+          aviso.hidden = false;
+        }
+      }
+    );
+  }
+
   document.querySelectorAll(".likert-btn").forEach((botao, indice) => {
     botao.classList.toggle("selected", indice === confiancaAtual - 1);
   });
+
   window.addEventListener("keydown", (evento) => {
     const demo = document.getElementById("call-demo");
-    if (demo.hidden) return;
+    if (!demo || demo.hidden) return;
     if (evento.key === "Escape") {
       evento.preventDefault();
       fecharSimulacaoLigacao();
@@ -909,7 +952,8 @@ function inicializarAplicativo() {
     }
     if (evento.key === "Tab") {
       evento.preventDefault();
-      document.getElementById("call-demo-action").focus();
+      const acaoDemo = document.getElementById("call-demo-action");
+      if (acaoDemo) acaoDemo.focus();
     }
   });
 }
