@@ -1,9 +1,10 @@
-
 const FIREBASE_DEFAULT_URL = "https://sos-escola-a6ccb-default-rtdb.firebaseio.com";
 let perfilAtual = null;
 let confiancaAtual = 3;
 let simulacaoLigacaoTimer;
 let simulacaoDuracaoTimer;
+let simulacaoToqueTimer;
+let simulacaoAudioCtx = null;
 let simulacaoInicio;
 let focoAnteriorSimulacao = null;
 let estadoQuiz = null;
@@ -2517,6 +2518,100 @@ async function ligarEmergencia(numero) {
   window.location.href = `tel:${numero}`;
 }
 
+function tocarToqueChamadaSimulada() {
+  pararAudioSimulacao();
+  const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+  if (!AudioContextClass) return;
+
+  try {
+    simulacaoAudioCtx = new AudioContextClass();
+    if (simulacaoAudioCtx.state === "suspended") {
+      void simulacaoAudioCtx.resume();
+    }
+
+    const emitirTom = () => {
+      if (!simulacaoAudioCtx) return;
+      const agora = simulacaoAudioCtx.currentTime;
+      const osc = simulacaoAudioCtx.createOscillator();
+      const gain = simulacaoAudioCtx.createGain();
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(425, agora);
+      gain.gain.setValueAtTime(0.001, agora);
+      gain.gain.exponentialRampToValueAtTime(0.08, agora + 0.04);
+      gain.gain.setValueAtTime(0.08, agora + 0.75);
+      gain.gain.exponentialRampToValueAtTime(0.001, agora + 0.85);
+      osc.connect(gain);
+      gain.connect(simulacaoAudioCtx.destination);
+      osc.start(agora);
+      osc.stop(agora + 0.86);
+    };
+
+    emitirTom();
+    simulacaoToqueTimer = window.setInterval(emitirTom, 1400);
+  } catch (error) {
+    console.warn("Não foi possível iniciar o som de chamada simulada.", error);
+  }
+}
+
+function tocarBipeEncerramentoSimulado() {
+  const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+  if (!AudioContextClass) return;
+  try {
+    const ctx = new AudioContextClass();
+    const agora = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = "sine";
+    osc.frequency.setValueAtTime(340, agora);
+    gain.gain.setValueAtTime(0.06, agora);
+    gain.gain.exponentialRampToValueAtTime(0.001, agora + 0.25);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(agora);
+    osc.stop(agora + 0.26);
+    osc.onended = () => { void ctx.close(); };
+  } catch {
+    // Ignora caso o navegador bloqueie áudio
+  }
+}
+
+function falarAtendenteSimulado(numero) {
+  if (!("speechSynthesis" in window)) return;
+  try {
+    window.speechSynthesis.cancel();
+    const texto = numero === "192"
+      ? "SAMU 192, emergência médica. Informe o endereço da escola, a idade aproximada da criança e o que está acontecendo."
+      : "Corpo de Bombeiros 193, qual a sua emergência? Informe o endereço completo da escola e se há risco no local.";
+    const fala = new SpeechSynthesisUtterance(texto);
+    fala.lang = "pt-BR";
+    fala.rate = 1.02;
+    fala.pitch = 1.05;
+    const vozes = window.speechSynthesis.getVoices();
+    const vozPt = vozes.find((v) => v.lang && v.lang.toLowerCase().startsWith("pt"));
+    if (vozPt) fala.voice = vozPt;
+    window.speechSynthesis.speak(fala);
+  } catch (error) {
+    console.warn("Não foi possível reproduzir a voz do atendente simulado.", error);
+  }
+}
+
+function pararAudioSimulacao() {
+  window.clearInterval(simulacaoToqueTimer);
+  simulacaoToqueTimer = null;
+  if (simulacaoAudioCtx) {
+    const ctx = simulacaoAudioCtx;
+    simulacaoAudioCtx = null;
+    void ctx.close().catch(() => {});
+  }
+  if ("speechSynthesis" in window) {
+    try {
+      window.speechSynthesis.cancel();
+    } catch {
+      // Ignora erro ao cancelar fala
+    }
+  }
+}
+
 function simularLigacaoEmergencia(numero) {
   if (numero !== "192" && numero !== "193") {
     throw new Error("Número de emergência não permitido.");
@@ -2529,6 +2624,7 @@ function simularLigacaoEmergencia(numero) {
   const botaoAcao = document.getElementById("call-demo-action");
   focoAnteriorSimulacao = document.activeElement;
   limparTimersSimulacao();
+  pararAudioSimulacao();
   title.textContent = numero === "192" ? "SAMU 192" : "Bombeiros 193";
   status.textContent = "Chamando…";
   duracao.textContent = "00:00";
@@ -2539,15 +2635,18 @@ function simularLigacaoEmergencia(numero) {
   demo.classList.remove("is-connected", "is-ended");
   demo.classList.add("is-ringing");
   botaoAcao.focus();
+  tocarToqueChamadaSimulada();
   simulacaoLigacaoTimer = window.setTimeout(() => {
     if (demo.hidden) return;
+    pararAudioSimulacao();
     demo.classList.remove("is-ringing");
     demo.classList.add("is-connected");
     status.textContent = "Chamada simulada em andamento";
     simulacaoInicio = Date.now();
     atualizarDuracaoSimulacao();
     simulacaoDuracaoTimer = window.setInterval(atualizarDuracaoSimulacao, 1000);
-  }, 1200);
+    falarAtendenteSimulado(numero);
+  }, 2400);
 }
 
 function atualizarDuracaoSimulacao() {
@@ -2570,6 +2669,8 @@ function encerrarSimulacaoLigacao() {
     return;
   }
   limparTimersSimulacao();
+  pararAudioSimulacao();
+  tocarBipeEncerramentoSimulado();
   demo.classList.remove("is-ringing", "is-connected");
   demo.classList.add("is-ended");
   document.getElementById("call-demo-status").textContent = "Chamada simulada encerrada";
@@ -2579,6 +2680,7 @@ function encerrarSimulacaoLigacao() {
 
 function fecharSimulacaoLigacao() {
   limparTimersSimulacao();
+  pararAudioSimulacao();
   document.getElementById("call-demo").classList.remove("is-ringing", "is-connected", "is-ended");
   document.getElementById("call-demo").hidden = true;
   if (focoAnteriorSimulacao?.isConnected) focoAnteriorSimulacao.focus();
