@@ -1,15 +1,15 @@
 const { createHmac, timingSafeEqual } = require("node:crypto");
-const { cert, getApps, initializeApp } = require("firebase-admin/app");
-const { getAuth } = require("firebase-admin/auth");
-const { getDatabase } = require("firebase-admin/database");
+const { criarServicosFirebase } = require("./firebase-admin");
 
-const APP_NAME = "sos-escola-registration";
-const DATABASE_URL = "https://sos-escola-a6ccb-default-rtdb.firebaseio.com";
 const RATE_LIMIT_PATH = "sos_escola_signup_attempts";
 const CODE_LIMIT_WINDOW_MS = 15 * 60 * 1000;
 const REGISTRATION_LIMIT_WINDOW_MS = 60 * 60 * 1000;
 const MAX_FAILED_CODES = 5;
 const MAX_REGISTRATIONS = 20;
+const PROFISSOES_INSTRUTOR = new Set([
+  "profissional-saude",
+  "profissional-seguranca-resgate"
+]);
 const CARGOS = new Set([
   "Professor(a)",
   "Auxiliar / Cuidador(a)",
@@ -29,9 +29,13 @@ function validateRegistration(body) {
   const nome = typeof body.nome === "string" ? body.nome.trim() : "";
   const email = typeof body.email === "string" ? body.email.trim().toLowerCase() : "";
   if (body.codigoInstrutor !== undefined && typeof body.codigoInstrutor !== "string") return null;
+  if (body.profissaoInstrutor !== undefined && typeof body.profissaoInstrutor !== "string") return null;
   const tipoConta = typeof body.codigoInstrutor === "string" && body.codigoInstrutor.length > 0
     ? "instrutor"
     : "equipe";
+  const profissaoInformada = typeof body.profissaoInstrutor === "string"
+    ? body.profissaoInstrutor
+    : "";
   const cargo = tipoConta === "instrutor"
     ? ""
     : typeof body.cargo === "string"
@@ -45,13 +49,23 @@ function validateRegistration(body) {
     email.length > 254 ||
     !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) ||
     (tipoConta === "equipe" && !CARGOS.has(cargo)) ||
+    (tipoConta === "instrutor" && profissaoInformada &&
+      !PROFISSOES_INSTRUTOR.has(profissaoInformada)) ||
+    (tipoConta === "equipe" && body.profissaoInstrutor !== undefined) ||
     senha.length < 6 ||
     senha.length > 128
   ) {
     return null;
   }
 
-  return { nome, email, cargo, senha, tipoConta };
+  return {
+    nome,
+    email,
+    cargo,
+    profissaoInstrutor: tipoConta === "instrutor" ? profissaoInformada : "",
+    senha,
+    tipoConta
+  };
 }
 
 function codigoCorreto(informado, esperado) {
@@ -61,30 +75,33 @@ function codigoCorreto(informado, esperado) {
   return recebido.length === configurado.length && timingSafeEqual(recebido, configurado);
 }
 
-function criarServicosFirebase() {
-  const credencialJson = process.env.FIREBASE_SERVICE_ACCOUNT;
-  if (!credencialJson) throw new Error("FIREBASE_SERVICE_ACCOUNT is not configured.");
+function identificarProfissaoInstrutor(codigo, codigosEsperados) {
+  const saude = codigosEsperados["profissional-saude"];
+  const resgate = codigosEsperados["profissional-seguranca-resgate"];
+  if (!saude || !resgate || saude === resgate) return null;
+  const correspondeSaude = codigoCorreto(codigo, saude);
+  const correspondeResgate = codigoCorreto(codigo, resgate);
+  if (correspondeSaude === correspondeResgate) return null;
+  return correspondeSaude
+    ? "profissional-saude"
+    : "profissional-seguranca-resgate";
+}
 
-  const credencial = JSON.parse(credencialJson);
-  if (
-    credencial.project_id !== "sos-escola-a6ccb" ||
-    !credencial.client_email ||
-    !credencial.private_key
-  ) {
-    throw new Error("FIREBASE_SERVICE_ACCOUNT is invalid or incomplete.");
+function respostaErroFirebaseAuth(error) {
+  switch (error?.code) {
+    case "auth/insufficient-permission":
+      return "firebase-auth-permission-denied";
+    case "auth/invalid-credential":
+    case "app/invalid-credential":
+      return "firebase-admin-credentials-invalid";
+    case "auth/project-not-found":
+    case "app/project-not-found":
+      return "firebase-admin-project-mismatch";
+    case "auth/operation-not-allowed":
+      return "firebase-email-password-disabled";
+    default:
+      return "account-creation-failed";
   }
-
-  const appExistente = getApps().find((item) => item.name === APP_NAME);
-  const app = appExistente || initializeApp({
-    credential: cert(credencial),
-    databaseURL: DATABASE_URL
-  }, APP_NAME);
-
-  return {
-    auth: getAuth(app),
-    database: getDatabase(app),
-    chaveHash: credencial.private_key
-  };
 }
 
 function obterIpCliente(req) {
@@ -144,7 +161,7 @@ async function removerContaParcial(auth, database, uid, tipoConta) {
   }
 }
 
-module.exports = async function register(req, res) {
+async function register(req, res, obterServicos = criarServicosFirebase) {
   if (req.method !== "POST") {
     res.setHeader("Allow", "POST");
     return respond(res, 405, { error: "method-not-allowed" });
@@ -161,20 +178,32 @@ module.exports = async function register(req, res) {
 
   let servicos;
   try {
-    servicos = criarServicosFirebase();
+    servicos = obterServicos();
   } catch (error) {
     console.error("Firebase registration is not configured.", error);
     return respond(res, 503, { error: "registration-unavailable" });
   }
 
   if (cadastro.tipoConta === "instrutor") {
-    const codigoEsperado = process.env.INSTRUCTOR_SIGNUP_CODE;
-    if (!codigoEsperado) {
-      console.error("INSTRUCTOR_SIGNUP_CODE is not configured.");
+    const codigosEsperados = {
+      "profissional-saude": process.env.HEALTH_INSTRUCTOR_SIGNUP_CODE,
+      "profissional-seguranca-resgate": process.env.RESCUE_INSTRUCTOR_SIGNUP_CODE
+    };
+    const profissaoDetectada = identificarProfissaoInstrutor(
+      req.body.codigoInstrutor,
+      codigosEsperados
+    );
+    if (
+      !Object.values(codigosEsperados).every(Boolean) ||
+      codigosEsperados["profissional-saude"] ===
+        codigosEsperados["profissional-seguranca-resgate"]
+    ) {
+      console.error("Health and rescue instructor signup codes are not fully configured.");
       return respond(res, 503, { error: "registration-unavailable" });
     }
 
-    if (!codigoCorreto(req.body.codigoInstrutor, codigoEsperado)) {
+    if (!profissaoDetectada ||
+        (cadastro.profissaoInstrutor && cadastro.profissaoInstrutor !== profissaoDetectada)) {
       const ip = obterIpCliente(req);
       if (!ip) return respond(res, 503, { error: "registration-unavailable" });
 
@@ -198,6 +227,7 @@ module.exports = async function register(req, res) {
 
       return respond(res, 403, { error: "invalid-instructor-code" });
     }
+    cadastro.profissaoInstrutor = profissaoDetectada;
   }
 
   const ip = obterIpCliente(req);
@@ -227,6 +257,9 @@ module.exports = async function register(req, res) {
       password: cadastro.senha,
       displayName: cadastro.nome
     });
+    if (cadastro.tipoConta === "instrutor") {
+      await servicos.auth.setCustomUserClaims(usuario.uid, { instructor: true });
+    }
   } catch (error) {
     if (error.code === "auth/email-already-exists") {
       return respond(res, 409, { error: "email-already-registered" });
@@ -235,7 +268,15 @@ module.exports = async function register(req, res) {
       return respond(res, 400, { error: "invalid-registration" });
     }
     console.error("Could not create Firebase Authentication account.", error);
-    return respond(res, 500, { error: "registration-failed" });
+    if (usuario) {
+      await removerContaParcial(
+        servicos.auth,
+        servicos.database,
+        usuario.uid,
+        cadastro.tipoConta
+      );
+    }
+    return respond(res, 500, { error: respostaErroFirebaseAuth(error) });
   }
 
   try {
@@ -245,6 +286,7 @@ module.exports = async function register(req, res) {
         nome: cadastro.nome,
         email: cadastro.email,
         cargo: cadastro.cargo,
+        profissaoInstrutor: cadastro.profissaoInstrutor,
         perfil: cadastro.tipoConta,
         criadoEm: new Date().toISOString()
       }
@@ -264,10 +306,14 @@ module.exports = async function register(req, res) {
       usuario.uid,
       cadastro.tipoConta
     );
-    return respond(res, 500, { error: "registration-failed" });
+    return respond(res, 500, { error: "registration-completion-failed" });
   }
-};
+}
 
+module.exports = register;
 module.exports.validateRegistration = validateRegistration;
 module.exports.codigoCorreto = codigoCorreto;
+module.exports.identificarProfissaoInstrutor = identificarProfissaoInstrutor;
+module.exports.respostaErroFirebaseAuth = respostaErroFirebaseAuth;
+module.exports.registrarLimite = registrarLimite;
 module.exports.criarServicosFirebase = criarServicosFirebase;

@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">SOS Escola</string>
+    <string name="title_activity_main">SOS Escola</string>
+    <string name="package_name">br.com.sosescola.app</string>
+    <string name="custom_url_scheme">br.com.sosescola.app</string>
+</resources>
