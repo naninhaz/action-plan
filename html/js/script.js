@@ -2582,19 +2582,34 @@ function falarAtendenteSimulado(numero) {
     const texto = numero === "192"
       ? "SAMU 192, emergência médica. Informe o endereço da escola, a idade aproximada da criança e o que está acontecendo."
       : "Corpo de Bombeiros 193, qual a sua emergência? Informe o endereço completo da escola e se há risco no local.";
+    
     const fala = new SpeechSynthesisUtterance(texto);
     fala.lang = "pt-BR";
-    fala.rate = 1.02;
-    fala.pitch = 1.05;
-    const vozes = window.speechSynthesis.getVoices();
-    const vozPt = vozes.find((v) => v.lang && v.lang.toLowerCase().startsWith("pt"));
-    if (vozPt) fala.voice = vozPt;
-    window.speechSynthesis.speak(fala);
+    fala.rate = 0.98; // Velocidade ligeiramente mais calma e realista
+    fala.pitch = 1.0;  // Tom neutro padrão
+
+    const carregarVoz = () => {
+      const vozes = window.speechSynthesis.getVoices();
+      // Prioriza vozes de melhor qualidade em português (como Google pt-BR ou Microsoft Natural)
+      const melhorVoz = vozes.find((v) => v.lang === "pt-BR" && (v.name.includes("Google") || v.name.includes("Natural") || v.name.includes("Online")))
+        || vozes.find((v) => v.lang && v.lang.toLowerCase().startsWith("pt"));
+      
+      if (melhorVoz) {
+        fala.voice = melhorVoz;
+      }
+      window.speechSynthesis.speak(fala);
+    };
+
+    // No Chrome/Edge as vozes carregam de forma assíncrona
+    if (window.speechSynthesis.getVoices().length > 0) {
+      carregarVoz();
+    } else {
+      window.speechSynthesis.onvoiceschanged = carregarVoz;
+    }
   } catch (error) {
     console.warn("Não foi possível reproduzir a voz do atendente simulado.", error);
   }
 }
-
 function pararAudioSimulacao() {
   window.clearInterval(simulacaoToqueTimer);
   simulacaoToqueTimer = null;
