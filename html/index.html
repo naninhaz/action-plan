@@ -3,8 +3,26 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="theme-color" content="#075985">
-<title>SOS Escola | Lei Lucas</title>
+<meta name="theme-color" content="#f8c8dc">
+<title>SOS Escola ♡ Primeiros Socorros | Lei Lucas</title>
+<meta name="description" content="Plataforma interativa de capacitação e protocolos rápidos de primeiros socorros no ambiente escolar (Lei nº 13.722/2018).">
+
+<!-- Pré-visualização ao compartilhar o link -->
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://action-plan-rho.vercel.app/">
+<meta property="og:title" content="SOS Escola · Primeiros Socorros | Lei Lucas">
+<meta property="og:description" content="Protocolos rápidos, simulador de casos clínicos e avaliação prática para a comunidade escolar.">
+<meta property="og:image" content="https://action-plan-rho.vercel.app/assets/og-banner.svg">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://action-plan-rho.vercel.app/assets/og-banner.svg">
+
+<!-- Favicon pastel girly embutido -->
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='18' fill='%23ffe6f0'/%3E%3Crect x='25' y='12' width='14' height='40' rx='7' fill='%23ffffff' stroke='%23e58cab' stroke-width='2'/%3E%3Crect x='12' y='25' width='40' height='14' rx='7' fill='%23ffffff' stroke='%23e58cab' stroke-width='2'/%3E%3Cpath d='M32 39 C32 39 23 32.5 23 27 C23 24 25.5 22 28.2 22 C30 22 31.4 23.2 32 24.5 C32.6 23.2 34 22 35.8 22 C38.5 22 41 24 41 27 C41 32.5 32 39 32 39 Z' fill='%23f48fb1'/%3E%3C/svg%3E">
+
+<!-- Fontes Soft & Pixel (Quicksand + Silkscreen) -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@500;600;700&family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
@@ -91,10 +109,22 @@
     </button>
 
     <div class="auth-emergency">
-      <span>Emergência? Ligue sem acessar o app.</span>
+      <span>🚨 EMERGÊNCIA? LIGUE SEM ACESSAR O APP:</span>
       <div class="call-btns">
-        <button type="button" onclick="ligarEmergencia('192')" class="call-btn">SAMU 192</button>
-        <button type="button" onclick="ligarEmergencia('193')" class="call-btn">Bombeiros 193</button>
+        <button type="button" onclick="ligarEmergencia('192')" class="call-btn">
+          <svg class="call-btn-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+          <span class="call-btn-text">
+            <small>SAMU</small>
+            <strong>192</strong>
+          </span>
+        </button>
+        <button type="button" onclick="ligarEmergencia('193')" class="call-btn">
+          <svg class="call-btn-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+          <span class="call-btn-text">
+            <small>BOMBEIROS</small>
+            <strong>193</strong>
+          </span>
+        </button>
       </div>
       <p class="emergency-notice">Os botões abrem uma chamada real. Em simulações, não confirme a ligação no discador.</p>
     </div>
@@ -103,9 +133,10 @@
 
 <header>
   <div class="brand-lockup">
+    <img src="assets/logo.svg" alt="Logo SOS Escola" class="brand-logo">
     <div>
       <h1>SOS Escola</h1>
-      <p id="header-sub">Primeiros socorros | Lei Lucas</p>
+      <p id="header-sub">Primeiros socorros · Lei Lucas</p>
     </div>
   </div>
   <button class="role-badge" onclick="trocarPerfil()">
@@ -116,10 +147,22 @@
 
 <div class="container">
   <div id="emergency-banner" class="emergency-banner">
-    <h2>Emergência?</h2>
+    <h2>🚨 EMERGÊNCIA? LIGUE AGORA</h2>
     <div class="call-btns">
-      <button type="button" onclick="ligarEmergencia('192')" class="call-btn">Ligar para o SAMU · 192</button>
-      <button type="button" onclick="ligarEmergencia('193')" class="call-btn">Ligar para Bombeiros · 193</button>
+      <button type="button" onclick="ligarEmergencia('192')" class="call-btn">
+        <svg class="call-btn-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+        <span class="call-btn-text">
+          <small>LIGAR SAMU</small>
+          <strong>192</strong>
+        </span>
+      </button>
+      <button type="button" onclick="ligarEmergencia('193')" class="call-btn">
+        <svg class="call-btn-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+        <span class="call-btn-text">
+          <small>BOMBEIROS</small>
+          <strong>193</strong>
+        </span>
+      </button>
     </div>
     <p class="emergency-notice">Emergência real: confirme a chamada no discador.</p>
     <button type="button" class="demo-call-btn" onclick="simularLigacaoEmergencia('192')">Testar chamada simulada</button>
@@ -459,8 +502,8 @@
         <svg class="service-icon" viewBox="0 0 64 64" focusable="false">
           <path d="M7 17h31a4 4 0 0 1 4 4v25H7zM42 28h10l8 10v8H42z" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/>
           <path d="M18 24v13m-6.5-6.5h13M44 33h6l5 6H44z" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-          <circle cx="19" cy="48" r="5" fill="#17252e" stroke="currentColor" stroke-width="3"/>
-          <circle cx="51" cy="48" r="5" fill="#17252e" stroke="currentColor" stroke-width="3"/>
+          <circle cx="19" cy="48" r="5" fill="#3a2230" stroke="currentColor" stroke-width="3"/>
+          <circle cx="51" cy="48" r="5" fill="#3a2230" stroke="currentColor" stroke-width="3"/>
         </svg>
       </div>
     </div>
