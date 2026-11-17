@@ -326,12 +326,20 @@ async function sincronizarRegistros() {
   const idsRemotos = new Set(remotos.map((registro) => registro.id));
   const uid = window.SosFirebase.currentUser()?.uid;
   if (!uid) throw new Error("É necessário entrar com uma conta Firebase para sincronizar.");
+  const locaisValidos = [];
   for (const registro of locais) {
     if (!idsRemotos.has(registro.id)) {
-      await enviarRegistroRemoto({ ...registro, uid: registro.uid || uid });
+      try {
+        await enviarRegistroRemoto({ ...registro, uid: registro.uid || uid });
+        locaisValidos.push(registro);
+      } catch (erroEnvio) {
+        console.warn("Descartando registro local antigo incompatível:", registro.id, erroEnvio);
+      }
+    } else {
+      locaisValidos.push(registro);
     }
   }
-  const registros = mesclarRegistros(locais, remotos);
+  const registros = mesclarRegistros(locaisValidos, remotos);
   salvarRegistrosLocais(registros);
   return registros;
 }
