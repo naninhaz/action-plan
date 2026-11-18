@@ -30,6 +30,10 @@
   font-family: "Quicksand", -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
+[hidden] {
+  display: none !important;
+}
+
 html { min-width: 320px; }
 
 body {
@@ -169,7 +173,7 @@ header p::before {
 
 #firebase-login[hidden], #signup-form-container[hidden],
 #auth-loading[hidden], #auth-session-error[hidden], #auth-session-logout[hidden],
-#signup-cargo-fields[hidden],
+#signup-cargo-fields[hidden], #signup-instructor-fields[hidden],
 #participant-profile[hidden], #participants-empty[hidden],
 #metric-profile-content[hidden], #profile-legacy-classification[hidden],
 #legacy-classification-form[hidden], #instructor-feedback-form[hidden] { display: none; }

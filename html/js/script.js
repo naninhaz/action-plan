@@ -1336,7 +1336,7 @@ async function lerRespostaJson(response) {
 function validarRequisitosSenha(senha) {
   const valor = typeof senha === "string" ? senha : "";
   return {
-    length: valor.length >= 8,
+    length: valor.length >= 6,
     uppercase: /[A-Z]/.test(valor),
     special: /[^A-Za-z0-9\s]/.test(valor),
     number: /[0-9]/.test(valor)
@@ -2585,12 +2585,11 @@ function falarAtendenteSimulado(numero) {
     
     const fala = new SpeechSynthesisUtterance(texto);
     fala.lang = "pt-BR";
-    fala.rate = 0.98; // Velocidade ligeiramente mais calma e realista
-    fala.pitch = 1.0;  // Tom neutro padrão
+    fala.rate = 0.98;
+    fala.pitch = 1.0;
 
     const carregarVoz = () => {
       const vozes = window.speechSynthesis.getVoices();
-      // Prioriza vozes de melhor qualidade em português (como Google pt-BR ou Microsoft Natural)
       const melhorVoz = vozes.find((v) => v.lang === "pt-BR" && (v.name.includes("Google") || v.name.includes("Natural") || v.name.includes("Online")))
         || vozes.find((v) => v.lang && v.lang.toLowerCase().startsWith("pt"));
       
@@ -2600,7 +2599,6 @@ function falarAtendenteSimulado(numero) {
       window.speechSynthesis.speak(fala);
     };
 
-    // No Chrome/Edge as vozes carregam de forma assíncrona
     if (window.speechSynthesis.getVoices().length > 0) {
       carregarVoz();
     } else {
@@ -2610,6 +2608,7 @@ function falarAtendenteSimulado(numero) {
     console.warn("Não foi possível reproduzir a voz do atendente simulado.", error);
   }
 }
+
 function pararAudioSimulacao() {
   window.clearInterval(simulacaoToqueTimer);
   simulacaoToqueTimer = null;
